@@ -51,6 +51,7 @@ class Graph:
         plt.draw()
         plt.pause(0.1)
 
+
 class SLP:
     def __init__(self,image,label):
         self.x = image.numpy()
