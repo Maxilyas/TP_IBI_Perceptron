@@ -52,26 +52,23 @@ class Graph:
         plt.pause(0.1)
 
 class SLP:
-    def __init__(self,k):
-        self.x = train_data[k]
-        self.t = train_data_label[k]
-
-        if k < 7000:
-            self.t_test = test_data_label[k]
-            self.x_test = test_data[k]
+    def __init__(self,image,label):
+        self.x = image.numpy()
+        self.t = label.numpy()
 
         self.outY_2 = np.zeros((1, output))
 
 
-    def activity_function_out_layer(self,weights_h2,biais_w2,x):
-        self.outY_2 = np.dot(x.reshape(1,784), weights_h2) + biais_w2
+    def activity_function_out_layer(self,weights_h2,biais_w2):
+        self.outY_2 = np.dot(self.x.reshape(1,784), weights_h2) + biais_w2
         return self.outY_2
 
     def guess(self):
         return np.argmax(self.outY_2)
 
-    def real_number(self,t):
-        return torch.max(t,0)
+    def real_number(self):
+        return np.argmax(self.t)
+        #return torch.argmax(t)
 
     def reformat_label_outY(self,prono_Y2):
         for i in range(output):
@@ -81,7 +78,7 @@ class SLP:
                 self.outY_2[0][i] = 1
         return self.outY_2
 
-    def correction_weights(self,weights_h2,biais_w2,x):
+    def correction_weights(self,weights_h2,biais_w2):
 
         #print("Shape X : ",self.x.reshape)
         #print("SHAPE CORR ERROR 1",self.error_1.shape)
@@ -89,7 +86,7 @@ class SLP:
         #print("Biais h1",biais_h1.shape)
         #print("WEIGHTS SHAPE H2 ",weights_h2.shape)
 
-        weights_h2 += lr * np.dot(x.reshape(784,1),np.subtract(self.t , self.outY_2))
+        weights_h2 += lr * np.dot(self.x.reshape(784,1),np.subtract(self.t , self.outY_2))
         biais_w2 += lr * np.subtract(self.t, self.outY_2)
 
         return weights_h2,biais_w2
@@ -145,22 +142,23 @@ if __name__ == '__main__':
     weights_h2 = np.random.rand(input, output)
 
     lr = 0.7
-    epoch = 2
+    epoch = 1
 
     # Training part
 
     for e in range(epoch):
         correct = 0
         GraphPrecision = Graph()
+        k = 0
         print("Epoch number : ", e)
-        for k in range(len_train_data):
-            Slp = SLP(k)
+        for image,label in train_loader:
+            Slp = SLP(image,label)
             print("Training Image : ",k)
 
-            Slp.outY_2 = Slp.activity_function_out_layer(weights_h2,biais_w2,Slp.x)
+            Slp.outY_2 = Slp.activity_function_out_layer(weights_h2,biais_w2)
 
             prono_Y2 = Slp.guess()
-            values, indices = Slp.real_number(Slp.t)
+            indices = Slp.real_number()
             if prono_Y2 == indices:
                 correct = correct + 1
             if k % 100 == 0 and k > 0:
@@ -173,20 +171,24 @@ if __name__ == '__main__':
 
             if prono_Y2 != indices:
                 Slp.outY_2 = Slp.reformat_label_outY(prono_Y2)
-                weights_h2, biais_w2 = Slp.correction_weights(weights_h2,biais_w2,Slp.x)
+                weights_h2, biais_w2 = Slp.correction_weights(weights_h2,biais_w2)
+            k = k +1
 
     # Testing part
 
     GraphPrecision = Graph()
     correct = 0
+    k = 0
     for k in range(len_test_data):
-        Slp = SLP(k)
+        image = test_data[k]
+        label = test_data_label[k]
+        Slp = SLP(image, label)
         print("Processing Image : ", k)
 
-        Slp.outY_2 = Slp.activity_function_out_layer(weights_h2, biais_w2,Slp.x_test)
+        Slp.outY_2 = Slp.activity_function_out_layer(weights_h2, biais_w2)
 
         prono_Y2 = Slp.guess()
-        values, indices = Slp.real_number(Slp.t_test)
+        indices = Slp.real_number()
 
         print("Prono :", prono_Y2)
         print("REAL NUMBER : ", indices)
@@ -198,6 +200,7 @@ if __name__ == '__main__':
             GraphPrecision.xplot.append(k)
             GraphPrecision.yplot.append((correct / k) * 100)
             GraphPrecision.updateGraph()
+        k = k + 1
 
     print("Nombre de prono correct : ", correct)
     print("Pourcentage de réussite : ", (correct / len_test_data) * 100)
