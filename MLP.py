@@ -158,21 +158,23 @@ if __name__ == '__main__':
 
     len_train_data = len(train_data)
     len_test_data = len(test_data)
+###########################################################
+    # Params
 
     input = 784
     hidden_input = 128
     output = 10
-
-    biais1 = np.ones((1,hidden_input))
-    #biais_w1 = np.random.rand(1,hidden_input)
-    weights_h1 = np.random.rand(input, hidden_input)
-    biais2 = np.ones((1,output))
-    #biais_w2 = np.random.rand(1, output)
-    weights_h2 = np.random.rand(hidden_input, output)
-
     lr = 0.01
     epoch = 1
 
+    weights_h1 = np.random.rand(input, hidden_input)
+    biais1 = np.ones((1,hidden_input))
+    weights_h2 = np.random.rand(hidden_input, output)
+    biais2 = np.ones((1,output))
+
+###########################################################
+    #biais_w1 = np.random.rand(1,hidden_input)
+    #biais_w2 = np.random.rand(1, output)
 
     # Training part
 
