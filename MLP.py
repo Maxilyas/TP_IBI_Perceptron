@@ -68,14 +68,15 @@ class MLP:
 
     def activity_function_hidden_layer(self):
         # Activity hidden layer
-        sumWX = np.dot(self.x, weights_h1) + biais1
-        for i in range(hidden_input):
-            self.outY_1[0][i] = scipy.special.expit(sumWX[0][i])
-            #self.outY_1[0][i] = 1 / (1 + np.exp(-sumWX[0][i]))
+        sumWX = np.add(np.dot(self.x, weights_h1), biais1)
+        self.outY_1 = scipy.special.expit(sumWX)
+        #for i in range(hidden_input):
+            #self.outY_1[0][i] = scipy.special.expit(sumWX[0][i])
+        #self.outY_1 = 1 / (1 + np.exp(-sumWX))
 
     def activity_function_out_layer(self):
         # Activity out layer
-        self.outY_2 = np.dot(self.outY_1, weights_h2) + biais2
+        self.outY_2 = np.add(np.dot(self.outY_1, weights_h2), biais2)
 
     def guess(self):
         return np.argmax(self.outY_2)
@@ -103,9 +104,9 @@ class MLP:
 
         # Gradient descent hidden layer
         sumEW = np.dot(self.error_2,weights_h2.T)
-        self.error_1 = self.outY_1 * (1 - self.outY_1) * sumEW
+        #self.error_1 = self.outY_1 * (1 - self.outY_1) * sumEW
 
-        #self.error_1 = np.multiply(np.multiply(self.outY_1, (np.subtract(1, self.outY_1))), sumEW)
+        self.error_1 = np.multiply(np.multiply(self.outY_1, (np.subtract(1, self.outY_1))), sumEW)
         #self.error_1 = sumEW
 
     def correction_weights(self):
