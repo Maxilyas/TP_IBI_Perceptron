@@ -59,30 +59,16 @@ class Graph:
 
 class MLP:
     def __init__(self):
+        self.weights_h1 = torch.randn(input, hidden_input)
+        self.weights_h2 = torch.randn(hidden_input, output)
+        self.biais1 = torch.ones((1, hidden_input))
+        self.biais2 = torch.ones((1, output))
+
+    def setImage(self):
         self.x = image
         self.t = label
-        #self.outY_1 = np.zeros((1, hidden_input))
-        #self.outY_2 = np.zeros((1, output))
-        #self.error_2 = np.zeros((1, output))
-        #self.error_1 = np.zeros((1, hidden_input))
 
-    def activity_function_hidden_layer(self):
-        # Activity hidden layer
-        sumWX = self.x.mm(weights_h1).add(biais1)
-        outY1 = torch.sigmoid(sumWX)
-
-        return outY1
-        #for i in range(hidden_input):
-            #self.outY_1[0][i] = scipy.special.expit(sumWX[0][i])
-        #self.outY_1 = 1 / (1 + np.exp(-sumWX))
-
-    def activity_function_out_layer(self):
-        # Activity out layer
-        outY2 = outY1.mm(weights_h2).add(biais2)
-
-        return outY2
-
-    def compareGuessRealNumber(self):
+    def compareGuessRealNumber(self,outY2):
         global correct
         if torch.argmax(outY2) == torch.argmax(self.t):
             correct = correct + 1
@@ -94,26 +80,36 @@ class MLP:
             else:
                 outY2[0][i] = 1
 
-    def gradient_descent(self):
+    def train(self):
+
+        # Activity hidden layer
+        sumWX = self.x.mm(self.weights_h1).add(self.biais1)
+        outY1 = torch.sigmoid(sumWX)
+        # Activity out layer
+        outY2 = outY1.mm(self.weights_h2).add(self.biais2)
         # Gradient descent out layer
-        global outY2
         self.reformat_label_outY(outY2)
         error2 = (self.t.sub(outY2))
 
+        # Compare for GRAPH UPDATE
+        Mlp.compareGuessRealNumber(outY2)
 
         # Gradient descent hidden layer
-        #self.error_1 = self.outY_1 * (1 - self.outY_1) * sumEW
-
-        error1 = outY1 * ( 1 - outY1)*error2.mm(weights_h2.t())
-        #self.error_1 = sumEW
-        return error2,error1
-    def correction_weights(self):
+        error1 = outY1 * ( 1 - outY1)*error2.mm(self.weights_h2.t())
         # Weights correction for each images
-        global weights_h1, biais1, weights_h2, biais2
-        weights_h1 += lr * self.x.t().mm(error1)
-        biais1 += lr * error1
-        weights_h2 += lr * outY1.t().mm(error2)
-        biais2 += lr * error2
+        self.weights_h1 += lr * self.x.t().mm(error1)
+        self.biais1 += lr * error1
+        self.weights_h2 += lr * outY1.t().mm(error2)
+        self.biais2 += lr * error2
+
+    def evaluate(self):
+        # Activity hidden layer
+        sumWX = self.x.mm(self.weights_h1).add(self.biais1)
+        outY1 = torch.sigmoid(sumWX)
+        # Activity out layer
+        outY2 = outY1.mm(self.weights_h2).add(self.biais2)
+        # Compare to get accuracy and graph update
+        Mlp.compareGuessRealNumber(outY2)
 
 
 
@@ -165,42 +161,20 @@ if __name__ == '__main__':
     hidden_input = 256
     output = 10
     lr = 0.04
-    epoch = 1
-
-    #weights_h1 = np.random.uniform(-1,1,(input,hidden_input))
-    #weights_h2 = np.random.uniform(-1, 1, (hidden_input, output))
-    #weights_h1 = np.random.rand(input, hidden_input)
-    weights_h1 = torch.randn(input,hidden_input)
-    weights_h2 = torch.randn(hidden_input,output)
-    biais1 = torch.ones((1,hidden_input))
-    #weights_h2 = np.random.rand(hidden_input, output)
-    biais2 = torch.ones((1,output))
+    epoch = 3
 
 ###########################################################
-    #biais_w1 = np.random.rand(1,hidden_input)
-    #biais_w2 = np.random.rand(1, output)
 
     # Training part
-
+    Mlp = MLP()
     for e in range(epoch):
         correct = 0
         GraphPrecision = Graph()
         k = 0
         print("Epoch number : ", e)
         for image,label in train_loader:
-            Mlp = MLP()
-
-            # Activity function
-            outY1 = Mlp.activity_function_hidden_layer()
-            outY2 = Mlp.activity_function_out_layer()
-
-            # Gradient and weights correction
-            error2,error1 = Mlp.gradient_descent()
-            Mlp.correction_weights()
-
-
-
-            Mlp.compareGuessRealNumber()
+            Mlp.setImage()
+            Mlp.train()
             # Update graph when k=100 images
             if k % 100 == 0 and k > 0:
                 print("Training Image : ", k)
@@ -214,18 +188,12 @@ if __name__ == '__main__':
     k = 0
     for image in test_loader:
         label = test_data_label[k]
+        Mlp.setImage()
+        Mlp.evaluate()
 
-        Mlp = MLP()
-        print("Processing Image : ", k)
-
-        # Activation functions
-        outY1 = Mlp.activity_function_hidden_layer()
-        outY2 = Mlp.activity_function_out_layer()
-
-        # Compare guess and real number
-        Mlp.compareGuessRealNumber()
         # Update graph each k=100 images
         if k % 100 == 0 and k > 0:
+            print("Processing Image : ", k)
             GraphPrecision.dynGraph()
 
         k = k + 1
