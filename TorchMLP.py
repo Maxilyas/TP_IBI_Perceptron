@@ -156,12 +156,13 @@ if __name__ == '__main__':
     len_test_data = len(test_data)
 ###########################################################
     # Params
-
+    #  95.557 with lr = 0.059 epoch = 4 and hidden_input = 256
+    #  96,457 with lr = 0.059 epoch = 4 and hidden_input = 1024
     input = 784
     hidden_input = 256
     output = 10
-    lr = 0.04
-    epoch = 3
+    lr = 0.059
+    epoch = 4
 
 ###########################################################
 
