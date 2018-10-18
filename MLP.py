@@ -88,7 +88,7 @@ class MLP:
     def compareGuessRealNumber(self):
         global correct
         if np.argmax(self.outY_2) == np.argmax(self.t):
-            correct = correct +1
+            correct = correct + 1
 
     def reformat_label_outY(self):
         for i in range(output):
@@ -163,14 +163,16 @@ if __name__ == '__main__':
     # Params
 
     input = 784
-    hidden_input = 128
+    hidden_input = 256
     output = 10
-    lr = 0.01
-    epoch = 1
+    lr = 0.07
+    epoch = 4
 
-    weights_h1 = np.random.rand(input, hidden_input)
+    weights_h1 = np.random.uniform(-1,1,(input,hidden_input))
+    weights_h2 = np.random.uniform(-1, 1, (hidden_input, output))
+    #weights_h1 = np.random.rand(input, hidden_input)
     biais1 = np.ones((1,hidden_input))
-    weights_h2 = np.random.rand(hidden_input, output)
+    #weights_h2 = np.random.rand(hidden_input, output)
     biais2 = np.ones((1,output))
 
 ###########################################################
@@ -186,7 +188,6 @@ if __name__ == '__main__':
         print("Epoch number : ", e)
         for image,label in train_loader:
             Mlp = MLP()
-            print("Training Image : ",k)
             # Activity function
             Mlp.activity_function_hidden_layer()
             Mlp.activity_function_out_layer()
@@ -194,6 +195,7 @@ if __name__ == '__main__':
             Mlp.compareGuessRealNumber()
             # Update graph when k=100 images
             if k % 100 == 0 and k > 0:
+                print("Training Image : ", k)
                 GraphPrecision.dynGraph()
 
             # Gradient and weights correction
