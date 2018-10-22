@@ -87,6 +87,7 @@ class MLP:
         outY1 = torch.sigmoid(sumWX)
         # Activity out layer
         outY2 = outY1.mm(self.weights_h2).add(self.biais2)
+
         # Gradient descent out layer
         self.reformat_label_outY(outY2)
         error2 = (self.t.sub(outY2))
@@ -108,6 +109,7 @@ class MLP:
         outY1 = torch.sigmoid(sumWX)
         # Activity out layer
         outY2 = outY1.mm(self.weights_h2).add(self.biais2)
+
         # Compare to get accuracy and graph update
         Mlp.compareGuessRealNumber(outY2)
 

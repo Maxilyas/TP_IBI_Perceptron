@@ -51,81 +51,71 @@ class Graph:
         plt.draw()
         plt.pause(0.1)
 
+    def dynGraph(self):
+        self.xplot.append(k)
+        self.yplot.append((correct / k) * 100)
+        self.updateGraph()
+
+
 class MLP:
-    def __init__(self,k):
-        self.x = train_data[k]
-        self.t = train_data_label[k]
+    def __init__(self):
+        self.weights_h1 = torch.randn(input, hidden_input,device=device,dtype=dtype,requires_grad=True)
+        self.weights_h2 = torch.randn(hidden_input, output,device=device,dtype=dtype,requires_grad=True)
+        self.biais1 = torch.ones((1, hidden_input))
+        self.biais2 = torch.ones((1, output))
 
-        if k < 7000:
-            self.t_test = test_data_label[k]
-            self.x_test = test_data[k]
+    def setImage(self):
+        self.x = image
+        self.t = label
 
-        self.outY_1 = np.zeros((1, hidden_input))
-        self.outY_2 = np.zeros((1, output))
+    def compareGuessRealNumber(self,outY2):
+        global correct
+        if torch.argmax(outY2) == torch.argmax(self.t):
+            correct = correct + 1
 
-        self.error_2 = np.zeros((1, output))
-        self.error_1 = np.zeros((1, hidden_input))
-
-    def activity_function_hidden_layer(self, weights_h1, biais_w1, x):
-        #print("Weights_h1 : ",weights_h1)
-        sumWX = np.dot(x.reshape(1,784), weights_h1) + biais_w1
-        #print("SUMWX : ",sumWX)
-        for i in range(hidden_input):
-            self.outY_1[0][i] = scipy.special.expit(sumWX[0][i])
-            #self.outY_1[0][i] = 1 / (1 + np.exp(-sumWX[0][i]))
-        #print ("OUTY1 ; ",self.outY_1)
-
-        return self.outY_1
-
-    def activity_function_out_layer(self,weights_h2,biais_w2):
-        self.outY_2 = np.dot(self.outY_1, weights_h2) + biais_w2
-        return self.outY_2
-
-    def guess(self):
-        return np.argmax(self.outY_2)
-
-    def real_number(self,t):
-        return torch.max(t,0)
-
-    def reformat_label_outY(self,prono_Y2):
+    def reformat_label_outY(self,outY2):
         for i in range(output):
-            if i != prono_Y2:
-                self.outY_2[0][i] = 0
+            if i != torch.argmax(outY2):
+                outY2[0][i] = 0
             else:
-                self.outY_2[0][i] = 1
-        return self.outY_2
+                outY2[0][i] = 1
 
-    def gradient_descent(self,weights_h2,t):
+    def train(self):
 
-        self.error_2 = np.subtract(t,self.outY_2)
-        sumEW = (np.dot(weights_h2, torch.t(self.error_2))) + biais_w1.T
-        #self.error_1 = np.dot((np.dot(self.outY_1,(np.subtract(1, self.outY_1.T)))), sumEW.T)
-        self.error_1 = sumEW.T
+        # Activity hidden layer
+        sumWX = self.x.mm(self.weights_h1).add(self.biais1)
+        outY1 = torch.sigmoid(sumWX)
+        # Activity out layer
+        outY2 = outY1.mm(self.weights_h2).add(self.biais2)
+        self.reformat_label_outY(outY2)
+        y_pred = self.x.mm(self.weights_h1).add(self.biais1).clamp(min=0).mm(self.weights_h2).add(self.biais2)
+        loss = (y_pred - self.t).pow(2).sum()
+        print(self.t,loss.data[0])
+        loss.backward()
 
-        #print("ERROR 1 : ",self.error_1)
-        #print("GRADIENT")
-        #print("SHAPE SUMEW :",sumEW.shape)
-        #print("SHAPE OUTY1",self.outY_1.shape)
-        #print("SHAPE T OUTY1",(self.outY_1.T).shape)
-        #print("SHAPE ERROR 1",self.error_1.shape)
-        #print("SHAPE ERROR 2",self.error_2.shape)
+        with torch.no_grad():
+            self.weights_h1 -= lr * self.weights_h1.grad
+            self.weights_h2 -= lr * self.weights_h2.grad
 
-        return self.error_2,self.error_1
+            self.weights_h1.grad.zero_()
+            self.weights_h2.grad.zero_()
 
-    def correction_weights(self,weights_h1,biais_w1,weights_h2,biais_w2,x):
+    def evaluate(self):
+        # Activity out layer
+        #outY2 = self.x.mm(self.weights_h1).add(self.biais1).clamp(min=0,max=1).mm(self.weights_h2).add
 
-        #print("Shape X : ",self.x.reshape)
-        #print("SHAPE CORR ERROR 1",self.error_1.shape)
-        #print("SHAPE WEIGHT H1 : ",weights_h1.shape)
-        #print("Biais h1",biais_h1.shape)
-        #print("WEIGHTS SHAPE H2 ",weights_h2.shape)
+        # Activity hidden layer
+        sumWX = self.x.mm(self.weights_h1).add(self.biais1)
+        outY1 = torch.sigmoid(sumWX)
+        # Activity out layer
+        outY2 = outY1.mm(self.weights_h2).add(self.biais2).clamp(min=0,max=1)
+        print("OUTY2",outY2)
 
-        weights_h1 += lr * np.dot(x.reshape(784,1),self.error_1)
-        biais_w1 = lr * self.error_1
-        weights_h2 += lr * np.dot(self.outY_1.T,self.error_2)
-        biais_w2 = lr * self.error_2
+        loss = (outY2 - self.t).pow(2).sum()
+        print(self.t,loss.item())
 
-        return weights_h1,biais_w1,weights_h2,biais_w2
+        loss.backward()
+
 
 
 
@@ -169,77 +159,55 @@ if __name__ == '__main__':
 
     len_train_data = len(train_data)
     len_test_data = len(test_data)
-
+###########################################################
+    # Params
+    #  95.557 with lr = 0.059 epoch = 4 and hidden_input = 256
+    #  96,457 with lr = 0.059 epoch = 4 and hidden_input = 1024
     input = 784
-    hidden_input = 128
+    hidden_input = 256
     output = 10
+    lr = 0.059
+    epoch = 1
 
-    biais_h1 = np.ones((1,hidden_input))
-    biais_w1 = np.random.rand(1,hidden_input)
-    weights_h1 = np.random.rand(input, hidden_input)
-    biais_h2 = np.ones((1,output))
-    biais_w2 = np.random.rand(1, output)
-    weights_h2 = np.random.rand(hidden_input, output)
+###########################################################
 
-    lr = 0.01
-    epoch = 2
-
+    dtype = torch.float
+    device = torch.device("cpu")
+    # device = torch.device("cuda:0") # Uncomment this to run on GPU
     # Training part
-
+    Mlp = MLP()
     for e in range(epoch):
         correct = 0
-        GraphPrecision = Graph()
+        #GraphPrecision = Graph()
+        k = 0
         print("Epoch number : ", e)
-        for k in range(len_train_data):
-            Mlp = MLP(k)
-            print("Training Image : ",k)
-
-            Mlp.outY_1 = Mlp.activity_function_hidden_layer(weights_h1,biais_w1,Mlp.x)
-            Mlp.outY_2 = Mlp.activity_function_out_layer(weights_h2,biais_w2)
-
-            prono_Y2 = Mlp.guess()
-            values, indices = Mlp.real_number(Mlp.t)
-            if prono_Y2 == indices:
-                correct = correct + 1
-            if k % 100 == 0 and k > 0:
-                GraphPrecision.xplot.append(k)
-                GraphPrecision.yplot.append((correct / k)*100)
-                GraphPrecision.updateGraph()
-
-            #print("Prono :", prono_Y2)
-            #print("REAL NUMBER : ",indices)
-
-            if prono_Y2 != indices:
-                Mlp.outY_2 = Mlp.reformat_label_outY(prono_Y2)
-                Mlp.error_2,Mlp.error_1 = Mlp.gradient_descent(weights_h2,Mlp.t)
-                weights_h1, biais_w1, weights_h2, biais_w2 = Mlp.correction_weights(weights_h1,biais_w1,weights_h2,biais_w2,Mlp.x)
+        for image,label in train_loader:
+            Mlp.setImage()
+            Mlp.train()
+            # Update graph when k=100 images
+            #if k % 100 == 0 and k > 0:
+                #print("Training Image : ", k)
+                #GraphPrecision.dynGraph()
+            k = k + 1
 
     # Testing part
 
     GraphPrecision = Graph()
     correct = 0
-    for k in range(len_test_data):
-        Mlp = MLP(k)
-        print("Processing Image : ", k)
+    k = 0
+    for image in test_loader:
+        label = test_data_label[k]
+        Mlp.setImage()
+        Mlp.evaluate()
 
-        Mlp.outY_1 = Mlp.activity_function_hidden_layer(weights_h1, biais_w1,Mlp.x_test)
-        Mlp.outY_2 = Mlp.activity_function_out_layer(weights_h2, biais_w2)
+        # Update graph each k=100 images
+        #if k % 100 == 0 and k > 0:
+            #print("Processing Image : ", k)
+            #GraphPrecision.dynGraph()
 
-        prono_Y2 = Mlp.guess()
-        values, indices = Mlp.real_number(Mlp.t_test)
+        k = k + 1
 
-        print("Prono :", prono_Y2)
-        print("REAL NUMBER : ", indices)
-
-        if prono_Y2 == indices:
-            correct = correct + 1
-
-        if k % 100 == 0 and k > 0:
-            GraphPrecision.xplot.append(k)
-            GraphPrecision.yplot.append((correct / k) * 100)
-            GraphPrecision.updateGraph()
-
-    print("Nombre de prono correct : ", correct)
-    print("Pourcentage de réussite : ", (correct / len_test_data) * 100)
+    #print("Nombre de prono correct : ", correct)
+    #print("Pourcentage de réussite : ", (correct / len_test_data) * 100)
 
 
