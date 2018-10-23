@@ -82,22 +82,20 @@ class MLP:
 
     def train(self):
 
-        # Activity hidden layer
-        sumWX = self.x.mm(self.weights_h1).add(self.biais1)
-        outY1 = torch.sigmoid(sumWX)
-        # Activity out layer
-        outY2 = outY1.mm(self.weights_h2).add(self.biais2)
-        self.reformat_label_outY(outY2)
-        #y_pred = self.x.mm(self.weights_h1).add(self.biais1).clamp(min=0).mm(self.weights_h2).add(self.biais2)
-        loss = (outY2 - self.t).pow(2).sum()
-        print(self.t,loss.data[0])
+        y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1)).mm(self.weights_h2).add(self.biais2)
+        #print("YPRED",y_pred)
+        self.reformat_label_outY(y_pred)
+        loss = (y_pred - self.t).pow(2).sum()
+        #print(self.t,loss.item())
+
         loss.backward()
 
-        Mlp.compareGuessRealNumber(outY2)
+
+        Mlp.compareGuessRealNumber(y_pred)
 
         with torch.no_grad():
-            self.weights_h1 -= lr * self.weights_h1.grad
-            self.weights_h2 -= lr * self.weights_h2.grad
+            self.weights_h1.data -= lr * self.weights_h1.grad.data
+            self.weights_h2.data -= lr * self.weights_h2.grad.data
 
             #print("WEIGHTS 1 :",self.weights_h1)
             #print("WEIGHTS 2 :", self.weights_h2)
@@ -106,20 +104,11 @@ class MLP:
             self.weights_h2.grad.zero_()
 
     def evaluate(self):
-        # Activity out layer
-        #outY2 = self.x.mm(self.weights_h1).add(self.biais1).clamp(min=0,max=1).mm(self.weights_h2).add
+        y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1)).mm(self.weights_h2).add(self.biais2)
+        #print("YPRED",y_pred)
+        self.reformat_label_outY(y_pred)
 
-        # Activity hidden layer
-        sumWX = self.x.mm(self.weights_h1).add(self.biais1)
-        outY1 = torch.sigmoid(sumWX)
-        # Activity out layer
-        outY2 = outY1.mm(self.weights_h2).add(self.biais2).clamp(min=0,max=1)
-        print("OUTY2",outY2)
-
-        loss = (outY2 - self.t).pow(2).sum()
-        print(self.t,loss.item())
-
-        loss.backward()
+        Mlp.compareGuessRealNumber(y_pred)
 
 
 
@@ -171,7 +160,7 @@ if __name__ == '__main__':
     input = 784
     hidden_input = 256
     output = 10
-    lr = 0.2
+    lr = 0.6
     epoch = 1
 
 ###########################################################
@@ -206,13 +195,13 @@ if __name__ == '__main__':
         Mlp.evaluate()
 
         # Update graph each k=100 images
-        #if k % 100 == 0 and k > 0:
-            #print("Processing Image : ", k)
-            #GraphPrecision.dynGraph()
+        if k % 100 == 0 and k > 0:
+            print("Processing Image : ", k)
+            GraphPrecision.dynGraph()
 
         k = k + 1
 
-    #print("Nombre de prono correct : ", correct)
-    #print("Pourcentage de réussite : ", (correct / len_test_data) * 100)
+    print("Nombre de prono correct : ", correct)
+    print("Pourcentage de réussite : ", (correct / len_test_data) * 100)
 
 
