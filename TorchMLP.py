@@ -179,7 +179,7 @@ if __name__ == '__main__':
             Mlp.setImage()
             Mlp.train()
             # Update graph when k=100 images
-            if k % 100 == 0 and k > 0:
+            if k % 1000 == 0 and k > 0:
                 print("Training Image : ", k)
                 GraphPrecision.dynGraph()
             k = k + 1
@@ -195,7 +195,7 @@ if __name__ == '__main__':
         Mlp.evaluate()
 
         # Update graph each k=100 images
-        if k % 100 == 0 and k > 0:
+        if k % 1000 == 0 and k > 0:
             print("Processing Image : ", k)
             GraphPrecision.dynGraph()
 

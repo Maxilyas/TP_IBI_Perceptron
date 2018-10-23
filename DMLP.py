@@ -88,14 +88,19 @@ class MLP:
         # Activity out layer
         outY2 = outY1.mm(self.weights_h2).add(self.biais2)
         self.reformat_label_outY(outY2)
-        y_pred = self.x.mm(self.weights_h1).add(self.biais1).clamp(min=0).mm(self.weights_h2).add(self.biais2)
-        loss = (y_pred - self.t).pow(2).sum()
+        #y_pred = self.x.mm(self.weights_h1).add(self.biais1).clamp(min=0).mm(self.weights_h2).add(self.biais2)
+        loss = (outY2 - self.t).pow(2).sum()
         print(self.t,loss.data[0])
         loss.backward()
+
+        Mlp.compareGuessRealNumber(outY2)
 
         with torch.no_grad():
             self.weights_h1 -= lr * self.weights_h1.grad
             self.weights_h2 -= lr * self.weights_h2.grad
+
+            #print("WEIGHTS 1 :",self.weights_h1)
+            #print("WEIGHTS 2 :", self.weights_h2)
 
             self.weights_h1.grad.zero_()
             self.weights_h2.grad.zero_()
@@ -166,28 +171,28 @@ if __name__ == '__main__':
     input = 784
     hidden_input = 256
     output = 10
-    lr = 0.059
+    lr = 0.2
     epoch = 1
 
 ###########################################################
 
     dtype = torch.float
     device = torch.device("cpu")
-    # device = torch.device("cuda:0") # Uncomment this to run on GPU
+    #device = torch.device("cuda:0") # Uncomment this to run on GPU
     # Training part
     Mlp = MLP()
     for e in range(epoch):
         correct = 0
-        #GraphPrecision = Graph()
+        GraphPrecision = Graph()
         k = 0
         print("Epoch number : ", e)
         for image,label in train_loader:
             Mlp.setImage()
             Mlp.train()
             # Update graph when k=100 images
-            #if k % 100 == 0 and k > 0:
-                #print("Training Image : ", k)
-                #GraphPrecision.dynGraph()
+            if k % 100 == 0 and k > 0:
+                print("Training Image : ", k)
+                GraphPrecision.dynGraph()
             k = k + 1
 
     # Testing part
