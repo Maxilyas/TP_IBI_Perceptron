@@ -141,7 +141,7 @@ if __name__ == '__main__':
     biais_w2 = np.random.rand(1, output)
     weights_h2 = np.random.rand(input, output)
 
-    lr = 0.7
+    lr = 0.0001
     epoch = 1
 
     # Training part
@@ -169,9 +169,9 @@ if __name__ == '__main__':
             #print("Prono :", prono_Y2)
             #print("REAL NUMBER : ",indices)
 
-            if prono_Y2 != indices:
-                Slp.outY_2 = Slp.reformat_label_outY(prono_Y2)
-                weights_h2, biais_w2 = Slp.correction_weights(weights_h2,biais_w2)
+            #if prono_Y2 != indices:
+            #Slp.outY_2 = Slp.reformat_label_outY(prono_Y2)
+            weights_h2, biais_w2 = Slp.correction_weights(weights_h2,biais_w2)
             k = k +1
 
     # Testing part

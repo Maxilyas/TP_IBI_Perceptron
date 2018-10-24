@@ -89,7 +89,7 @@ class MLP:
         outY2 = outY1.mm(self.weights_h2).add(self.biais2)
 
         # Gradient descent out layer
-        self.reformat_label_outY(outY2)
+        #self.reformat_label_outY(outY2)
         error2 = (self.t.sub(outY2))
 
         # Compare for GRAPH UPDATE
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     input = 784
     hidden_input = 256
     output = 10
-    lr = 0.059
+    lr = 0.01
     epoch = 4
 
 ###########################################################

@@ -59,14 +59,14 @@ class Graph:
 
 class MLP:
     def __init__(self):
-        self.weights_h1 = torch.randn(input, hidden_input,device=device,dtype=dtype,requires_grad=True)
-        self.weights_h2 = torch.randn(hidden_input, output,device=device,dtype=dtype,requires_grad=True)
-        self.biais1 = torch.ones((1, hidden_input))
-        self.biais2 = torch.ones((1, output))
+        self.weights_h1 = torch.autograd.Variable(torch.randn(input, hidden_input,device=device).type(dtype), requires_grad=True)
+        self.weights_h2 = torch.autograd.Variable(torch.randn(hidden_input, output,device=device).type(dtype),requires_grad=True)
+        self.biais1 = torch.autograd.Variable(torch.ones((1, hidden_input),device=device).type(dtype),requires_grad=True)
+        self.biais2 = torch.autograd.Variable(torch.ones((1, output),device=device).type(dtype),requires_grad=True)
 
     def setImage(self):
-        self.x = image
-        self.t = label
+        self.x = torch.autograd.Variable(image,requires_grad=False)
+        self.t = torch.autograd.Variable(label,requires_grad=False)
 
     def compareGuessRealNumber(self,outY2):
         global correct
@@ -84,24 +84,29 @@ class MLP:
 
         y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1)).mm(self.weights_h2).add(self.biais2)
         #print("YPRED",y_pred)
-        self.reformat_label_outY(y_pred)
+        #self.reformat_label_outY(y_pred)
         loss = (y_pred - self.t).pow(2).sum()
         #print(self.t,loss.item())
-
+        #print("loss",loss.size())
         loss.backward()
 
 
         Mlp.compareGuessRealNumber(y_pred)
 
         with torch.no_grad():
+            #print("weights",self.weights_h1.grad.data[0])
             self.weights_h1.data -= lr * self.weights_h1.grad.data
             self.weights_h2.data -= lr * self.weights_h2.grad.data
+            self.biais1.data -= lr * self.biais1.grad.data
+            self.biais2.data -= lr * self.biais2.grad.data
 
             #print("WEIGHTS 1 :",self.weights_h1)
             #print("WEIGHTS 2 :", self.weights_h2)
 
             self.weights_h1.grad.zero_()
             self.weights_h2.grad.zero_()
+            self.biais1.grad.zero_()
+            self.biais2.grad.zero_()
 
     def evaluate(self):
         y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1)).mm(self.weights_h2).add(self.biais2)
@@ -160,12 +165,12 @@ if __name__ == '__main__':
     input = 784
     hidden_input = 256
     output = 10
-    lr = 0.6
+    lr = 0.001
     epoch = 1
 
 ###########################################################
 
-    dtype = torch.float
+    dtype = torch.FloatTensor
     device = torch.device("cpu")
     #device = torch.device("cuda:0") # Uncomment this to run on GPU
     # Training part
