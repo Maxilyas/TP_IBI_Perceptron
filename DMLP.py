@@ -59,8 +59,8 @@ class Graph:
 
 class MLP:
     def __init__(self):
-        self.weights_h1 = torch.autograd.Variable(torch.randn(input, hidden_input,device=device).type(dtype), requires_grad=True)
-        self.weights_h2 = torch.autograd.Variable(torch.randn(hidden_input, output,device=device).type(dtype),requires_grad=True)
+        self.weights_h1 = torch.autograd.Variable(0.2*torch.randn(input, hidden_input,device=device).type(dtype), requires_grad=True)
+        self.weights_h2 = torch.autograd.Variable(0.2*torch.randn(hidden_input, output,device=device).type(dtype),requires_grad=True)
         self.biais1 = torch.autograd.Variable(torch.ones((1, hidden_input),device=device).type(dtype),requires_grad=True)
         self.biais2 = torch.autograd.Variable(torch.ones((1, output),device=device).type(dtype),requires_grad=True)
 
@@ -163,10 +163,11 @@ if __name__ == '__main__':
     #  95.557 with lr = 0.059 epoch = 4 and hidden_input = 256
     #  96,457 with lr = 0.059 epoch = 4 and hidden_input = 1024
     input = 784
-    hidden_input = 256
+    hidden_input = 32
     output = 10
-    lr = 0.001
-    epoch = 1
+    # lr = 0.019
+    lr = 0.06 # 94,28 descendre encore
+    epoch = 4
 
 ###########################################################
 
@@ -184,7 +185,7 @@ if __name__ == '__main__':
             Mlp.setImage()
             Mlp.train()
             # Update graph when k=100 images
-            if k % 100 == 0 and k > 0:
+            if k % 1000 == 0 and k > 0:
                 print("Training Image : ", k)
                 GraphPrecision.dynGraph()
             k = k + 1
