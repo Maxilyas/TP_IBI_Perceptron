@@ -51,59 +51,31 @@ class Graph:
         plt.draw()
         plt.pause(0.1)
 
-    def dynGraph(self):
-        self.xplot.append(k)
-        self.yplot.append((correct / k) * 100)
-        self.updateGraph()
-
-
-class MLP:
+class SLP:
     def __init__(self):
-        self.weights_h1 = weightReducFactor * torch.randn(input, hidden_input,device=device).type(dtype)
-        self.weights_h2 = torch.randn(hidden_input, output,device=device).type(dtype)
-        self.biais1 = torch.ones((1, hidden_input))
-        self.biais2 = torch.ones((1, output))
+        self.weights = weightReducFactor * torch.randn(input,output,device=device).type(dtype)
+        self.biais = torch.ones((1,output))
 
     def setImage(self):
         self.x = image
         self.t = label
 
-    def compareGuessRealNumber(self,y_pred):
+    def guess_real_number(self,y_pred):
         global correct
-        if torch.argmax(y_pred) == torch.argmax(self.t):
+        if torch.argmax(self.t) == torch.argmax(y_pred):
             correct = correct + 1
 
     def train(self):
+        y_pred = self.x.mm(self.weights).add(self.biais)
+        # Only for graph update
+        self.guess_real_number(y_pred)
 
-        # Activity hidden layer
-        sumWX = self.x.mm(self.weights_h1).add(self.biais1)
-        y = torch.sigmoid(sumWX)
-        # Activity out layer
-        y_pred = y.mm(self.weights_h2).add(self.biais2)
-
-        # Gradient descent out layer
-        error2 = (self.t - y_pred)
-
-        # Compare for GRAPH UPDATE
-        Mlp.compareGuessRealNumber(y_pred)
-
-        # Gradient descent hidden layer
-        error1 = y_pred * (1 - y_pred)*error2.mm(self.weights_h2.t())
-        # Weights correction for each images
-        self.weights_h1 += lr * self.x.t().mm(error1)
-        self.biais1 += lr * error1
-        self.weights_h2 += lr * y_pred.t().mm(error2)
-        self.biais2 += lr * error2
+        self.weights += lr * self.x.t()*(self.t - y_pred)
+        self.biais += lr * (self.t - y_pred)
 
     def evaluate(self):
-        # Activity hidden layer
-        sumWX = self.x.mm(self.weights_h1).add(self.biais1)
-        y = torch.sigmoid(sumWX)
-        # Activity out layer
-        y_pred = y.mm(self.weights_h2).add(self.biais2)
-
-        # Compare to get accuracy and graph update
-        Mlp.compareGuessRealNumber(y_pred)
+        y_pred = self.x.mm(self.weights).add(self.biais)
+        self.guess_real_number(y_pred)
 
 
 
@@ -146,56 +118,86 @@ if __name__ == '__main__':
     #for image,label in test_loader:
     #    affichage(image.numpy(),label.numpy())
 
-
     dtype = torch.FloatTensor
     device = torch.device("cpu")
 
-###########################################################
-    # Params
-    #  95.557 with lr = 0.059 epoch = 4 and hidden_input = 256
-    #  96,457 with lr = 0.059 epoch = 4 and hidden_input = 1024
+    isGraphActive = False
     input = 784
-    hidden_input = 256
     output = 10
-    lr = 0.01
-    epoch = 4
-    weightReducFactor = 1
-###########################################################
 
-    # Training part
-    Mlp = MLP()
-    for e in range(epoch):
-        correct = 0
-        GraphPrecision = Graph()
-        k = 0
-        print("Epoch number : ", e)
-        for image,label in train_loader:
-            Mlp.setImage()
-            Mlp.train()
-            # Update graph when k=100 images
-            if k % 1000 == 0 and k > 0:
-                print("Training Image : ", k)
-                GraphPrecision.dynGraph()
-            k = k + 1
+    lr = 0.11
+    epoch = 3
+    weightReducFactor = 1.1
 
-    # Testing part
+    lock = 0
+    reducW = 0.1
+    reducLr = 0.01
 
-    GraphPrecision = Graph()
-    correct = 0
-    k = 0
-    for image in test_loader:
-        label = test_data_label[k]
-        Mlp.setImage()
-        Mlp.evaluate()
+    for i in range(19):
+        if i == 10:
+            reducW = reducW*0.1
+        weightReducFactor = weightReducFactor - reducW
+        for j in range(40):
+            if j== 10 or j == 19 or j == 28 or j==37:
+                reducLr = reducLr * 0.1
+            lr = lr - reducLr
 
-        # Update graph each k=100 images
-        if k % 1000 == 0 and k > 0:
-            print("Processing Image : ", k)
-            GraphPrecision.dynGraph()
+            # Training part
+            print("Training...")
+            Slp = SLP()
+            for e in range(epoch):
+                nbepoch = e+1
+                info = "weightReducFactor:  {}, lr: {}, epoch: {}".format(weightReducFactor, lr, e+1)
+                if isGraphActive:
+                    GraphPrecision = Graph()
+                k = 0
+                correct = 0
+                print(info)
+                for image,label in train_loader:
+                    Slp.setImage()
+                    Slp.train()
+                    if k==5000:
+                        print("% : ", (correct / k) * 100)
+                    if k == 5000 and (correct/k)*100 < 15:
+                        lock = 1
+                        break
+                    if isGraphActive:
+                        if k % 100 == 0 and k > 0:
+                            GraphPrecision.xplot.append(k)
+                            GraphPrecision.yplot.append((correct / k)*100)
+                            GraphPrecision.updateGraph()
+                    k = k +1
+                if lock == 1:
+                    break
+            if lock == 0:
+                # Testing part
+                if isGraphActive:
+                    GraphPrecision = Graph()
+                k = 0
+                correct = 0
+                print("Test...")
+                for image in test_loader:
+                    label = test_data_label[k]
+                    Slp.setImage()
+                    Slp.evaluate()
 
-        k = k + 1
-
-    print("Nombre de prono correct : ", correct)
-    print("Pourcentage de réussite : ", (correct / len(test_data)) * 100)
-
+                    if isGraphActive:
+                        if k % 100 == 0 and k > 0:
+                            GraphPrecision.xplot.append(k)
+                            GraphPrecision.yplot.append((correct / k) * 100)
+                            GraphPrecision.updateGraph()
+                    k = k + 1
+                res = "Test : weightReducFactor:  {}, lr: {}, epoch: {}, Resultat: {}%".format(weightReducFactor,lr, nbepoch, (correct / len(test_data)) * 100)
+                #print(res)
+                outRes = open("testResultSLP.txt","a")
+                outRes.write(res)
+                outRes.write("\n")
+                outRes.close()
+                print("Nombre de prono correct : ", correct)
+                print("Pourcentage de réussite : ", (correct / len(test_data)) * 100)
+            lock = 0
+        lr = 0.11
+        reducLr=0.01
+    weightReducFactor=1.1
+    reducW=0.1
 

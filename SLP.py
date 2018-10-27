@@ -63,28 +63,12 @@ class SLP:
         self.outY_2 = np.dot(self.x.reshape(1,784), weights_h2) + biais_w2
         return self.outY_2
 
-    def guess(self):
-        return np.argmax(self.outY_2)
-
-    def real_number(self):
-        return np.argmax(self.t)
-        #return torch.argmax(t)
-
-    def reformat_label_outY(self,prono_Y2):
-        for i in range(output):
-            if i != prono_Y2:
-                self.outY_2[0][i] = 0
-            else:
-                self.outY_2[0][i] = 1
-        return self.outY_2
+    def guess_real_number(self):
+        global correct
+        if np.argmax(self.outY_2) == np.argmax(self.t):
+            correct = correct + 1
 
     def correction_weights(self,weights_h2,biais_w2):
-
-        #print("Shape X : ",self.x.reshape)
-        #print("SHAPE CORR ERROR 1",self.error_1.shape)
-        #print("SHAPE WEIGHT H1 : ",weights_h1.shape)
-        #print("Biais h1",biais_h1.shape)
-        #print("WEIGHTS SHAPE H2 ",weights_h2.shape)
 
         weights_h2 += lr * np.dot(self.x.reshape(784,1),np.subtract(self.t , self.outY_2))
         biais_w2 += lr * np.subtract(self.t, self.outY_2)
@@ -141,7 +125,7 @@ if __name__ == '__main__':
     biais_w2 = np.random.rand(1, output)
     weights_h2 = np.random.rand(input, output)
 
-    lr = 0.0001
+    lr = 0.01
     epoch = 1
 
     # Training part
@@ -157,20 +141,12 @@ if __name__ == '__main__':
 
             Slp.outY_2 = Slp.activity_function_out_layer(weights_h2,biais_w2)
 
-            prono_Y2 = Slp.guess()
-            indices = Slp.real_number()
-            if prono_Y2 == indices:
-                correct = correct + 1
+            Slp.guess_real_number()
             if k % 100 == 0 and k > 0:
                 GraphPrecision.xplot.append(k)
                 GraphPrecision.yplot.append((correct / k)*100)
                 GraphPrecision.updateGraph()
 
-            #print("Prono :", prono_Y2)
-            #print("REAL NUMBER : ",indices)
-
-            #if prono_Y2 != indices:
-            #Slp.outY_2 = Slp.reformat_label_outY(prono_Y2)
             weights_h2, biais_w2 = Slp.correction_weights(weights_h2,biais_w2)
             k = k +1
 
@@ -187,15 +163,7 @@ if __name__ == '__main__':
 
         Slp.outY_2 = Slp.activity_function_out_layer(weights_h2, biais_w2)
 
-        prono_Y2 = Slp.guess()
-        indices = Slp.real_number()
-
-        print("Prono :", prono_Y2)
-        print("REAL NUMBER : ", indices)
-
-        if prono_Y2 == indices:
-            correct = correct + 1
-
+        Slp.guess_real_number()
         if k % 100 == 0 and k > 0:
             GraphPrecision.xplot.append(k)
             GraphPrecision.yplot.append((correct / k) * 100)

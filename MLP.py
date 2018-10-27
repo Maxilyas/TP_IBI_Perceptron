@@ -90,13 +90,6 @@ class MLP:
         if np.argmax(self.outY_2) == np.argmax(self.t):
             correct = correct + 1
 
-    def reformat_label_outY(self):
-        for i in range(output):
-            if i != self.guess():
-                self.outY_2[0][i] = 0
-            else:
-                self.outY_2[0][i] = 1
-
     def gradient_descent(self):
 
         # Gradient descent out layer
@@ -199,7 +192,6 @@ if __name__ == '__main__':
                 GraphPrecision.dynGraph()
 
             # Gradient and weights correction
-            Mlp.reformat_label_outY()
             Mlp.gradient_descent()
             Mlp.correction_weights()
             k = k + 1
