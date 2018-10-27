@@ -59,9 +59,15 @@ class Graph:
 
 class MLP:
     def __init__(self):
-        self.weights_h1 = torch.autograd.Variable(0.2*torch.randn(input, hidden_input,device=device).type(dtype), requires_grad=True)
-        self.weights_h2 = torch.autograd.Variable(0.2*torch.randn(hidden_input, output,device=device).type(dtype),requires_grad=True)
+        self.weights_h1 = torch.autograd.Variable(weightReduc*torch.randn(input, hidden_input,device=device).type(dtype), requires_grad=True)
         self.biais1 = torch.autograd.Variable(torch.ones((1, hidden_input),device=device).type(dtype),requires_grad=True)
+        if nbLayers > 1:
+            for j in range(nbLayers - 1):
+                self.weights_j = 'self.weights_{}'.format(j)
+                self.biaisl_j = 'self.biaisl_{}'.format(j)
+                self.weights_j = torch.autograd.Variable(weightReduc*torch.randn(hidden_input, hidden_input,device=device).type(dtype),requires_grad=True)
+                self.biaisl_j = torch.autograd.Variable(torch.ones((1, hidden_input),device=device).type(dtype),requires_grad=True)
+        self.weights_h2 = torch.autograd.Variable(weightReduc*torch.randn(hidden_input, output,device=device).type(dtype),requires_grad=True)
         self.biais2 = torch.autograd.Variable(torch.ones((1, output),device=device).type(dtype),requires_grad=True)
 
     def setImage(self):
@@ -81,8 +87,19 @@ class MLP:
                 outY2[0][i] = 1
 
     def train(self):
+        if activationFunction == 1:
+            y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1))
+        if activationFunction == 2:
+            y_pred = self.x.mm(self.weights_h1).add(self.biais1).clamp(min=0)
+        if nbLayers > 1:
+            for j in range(nbLayers-1):
+                #print("self",self.weights_j)
+                y_pred = y_pred.mm(self.weights_j).add(self.biaisl_j)
+        y_pred = y_pred.mm(self.weights_h2).add(self.biais2)
 
-        y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1)).mm(self.weights_h2).add(self.biais2)
+
+        #y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1)).mm(self.weights_h2).add(self.biais2)
+
         #print("YPRED",y_pred)
         #self.reformat_label_outY(y_pred)
         loss = (y_pred - self.t).pow(2).sum()
@@ -99,19 +116,31 @@ class MLP:
             self.weights_h2.data -= lr * self.weights_h2.grad.data
             self.biais1.data -= lr * self.biais1.grad.data
             self.biais2.data -= lr * self.biais2.grad.data
+            if nbLayers > 1:
+                for j in range(nbLayers-1):
+                    self.weights_j.data -= lr* self.weights_j.grad.data
+                    self.biaisl_j.data -= lr*self.biaisl_j.grad.data
 
-            #print("WEIGHTS 1 :",self.weights_h1)
-            #print("WEIGHTS 2 :", self.weights_h2)
+                    self.weights_j.grad.zero_()
+                    self.biaisl_j.grad.zero_()
 
             self.weights_h1.grad.zero_()
             self.weights_h2.grad.zero_()
             self.biais1.grad.zero_()
             self.biais2.grad.zero_()
 
+
+
     def evaluate(self):
-        y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1)).mm(self.weights_h2).add(self.biais2)
+        y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1))
+        if nbLayers > 1:
+            for j in range(nbLayers - 1):
+                y_pred = y_pred.mm(self.weights_j).add(self.biaisl_j)
+        y_pred = y_pred.mm(self.weights_h2).add(self.biais2)
+
+        #y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1)).mm(self.weights_h2).add(self.biais2)
         #print("YPRED",y_pred)
-        self.reformat_label_outY(y_pred)
+        #self.reformat_label_outY(y_pred)
 
         Mlp.compareGuessRealNumber(y_pred)
 
@@ -159,15 +188,22 @@ if __name__ == '__main__':
     len_train_data = len(train_data)
     len_test_data = len(test_data)
 ###########################################################
+    # weightReduc = 0.1,hidden_layer= 32,lr = 0.015,nbLayers = 4,epoch = 3 ---> 93,385%
+    # weightReduc = 0.1,hidden_layer= 128,lr = 0.00268,nbLayers = 3,epoch = 4 ---> 93,528%
     # Params
     #  95.557 with lr = 0.059 epoch = 4 and hidden_input = 256
     #  96,457 with lr = 0.059 epoch = 4 and hidden_input = 1024
     input = 784
-    hidden_input = 32
+    hidden_input = 16
     output = 10
     # lr = 0.019
-    lr = 0.06 # 94,28 descendre encore
+    lr = 0.01 # 94,28 descendre encore
     epoch = 4
+    weightReduc = 0.1
+    nbLayers = 2
+
+    # 1 for sigmoid, 2 for ReLU
+    activationFunction = 2
 
 ###########################################################
 
