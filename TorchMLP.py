@@ -13,6 +13,7 @@ import numpy as np # pour pouvoir utiliser des matrices
 import matplotlib.pyplot as plt # pour l'affichage
 import torch,torch.utils.data
 import scipy.special
+import re
 
 # fonction qui va afficher l'image située à l'index index
 def affichage(image,label):
@@ -64,7 +65,7 @@ class MLP:
         self.biais1 = torch.ones((1, hidden_input))
         self.biais2 = torch.ones((1, output))
 
-    def setImage(self):
+    def setImage(self,image,label):
         self.x = image
         self.t = label
 
@@ -88,11 +89,11 @@ class MLP:
         Mlp.compareGuessRealNumber(y_pred)
 
         # Gradient descent hidden layer
-        error1 = y_pred * (1 - y_pred)*error2.mm(self.weights_h2.t())
+        error1 = y * (1 - y)*error2.mm(self.weights_h2.t())
         # Weights correction for each images
         self.weights_h1 += lr * self.x.t().mm(error1)
         self.biais1 += lr * error1
-        self.weights_h2 += lr * y_pred.t().mm(error2)
+        self.weights_h2 += lr * y.t().mm(error2)
         self.biais2 += lr * error2
 
     def evaluate(self):
@@ -108,9 +109,106 @@ class MLP:
 
 
 
+
+
+
 ############################################################################################################################################
 
-# c'est ce qui sera lancé lors que l'on fait python tuto_python.py
+def test_with_multiple_parameters():
+    global reducW,weightReducFactor,lr,reducLr,lock,hidden_input
+    for i in range(19):
+        if i == 10:
+            reducW = reducW * 0.1
+        weightReducFactor = weightReducFactor - reducW
+        for j in range(40):
+            if j == 10 or j == 19 or j == 28 or j == 37:
+                reducLr = reducLr * 0.1
+            lr = lr - reducLr
+            for z in range(4):
+                if z != 0:
+                    hidden_input = hidden_input * 2
+                # Training part
+                Mlp = MLP()
+                for e in range(epoch):
+                    info = "weightReducFactor:  {}, lr: {}, hidden_input: {}, epoch: {}".format(weightReducFactor, lr, hidden_input, e + 1)
+                    print(info)
+                    correct = 0
+                    k = 0
+                    for image, label in train_loader:
+                        Mlp.setImage(image,label)
+                        Mlp.train()
+                        if k == 5000 and e == 0:
+                            print("% : ", (correct / k) * 100)
+                        if k == 5000 and (correct / k) * 100 < 15 and e == 0:
+                            lock = 1
+                            break
+                        k = k + 1
+                    if lock == 1:
+                        break
+
+                    # Testing part
+                    correct = 0
+                    k = 0
+                    for image in test_loader:
+                        label = test_data_label[k]
+                        Mlp.setImage(image,label)
+                        Mlp.evaluate()
+
+                        k = k + 1
+                    res = "Test : weightReducFactor:  {}, lr: {}, hidden_input: {}, epoch: {}, Resultat: {}%".format(
+                        round(weightReducFactor, 4), round(lr, 6), hidden_input, e + 1,
+                        round((correct / len(test_data)) * 100, 6))
+                    # print(res)
+                    outRes = open("testResultMLP.txt", "a")
+                    outRes.write(res)
+                    outRes.write("\n")
+                    outRes.close()
+                    print("Nombre de prono correct : ", correct)
+                    print("Pourcentage de réussite : ", (correct / len(test_data)) * 100)
+                lock = 0
+            hidden_input = 16
+        lr = 0.11
+        reducLr = 0.01
+    weightReducFactor = 1.1
+    reducW = 0.1
+
+def parse_res():
+
+    with open('testResultMLP.txt') as f:
+        data = []
+        for line in f:
+            transac = re.findall(r"[-+]?\d*\.\d+|\d+",line)
+            data.append(transac)
+    hidden = 16
+    for z in range(4):
+        for j in range(1,5):
+
+            weightRed = []
+            learningRate = []
+            res = []
+            for i in data:
+                #print("i",i[2])
+                #print("j",str(j))
+                if str(j) == i[3] and str(hidden) == i[2]:
+                    weightRed.append(float(i[0]))
+                    learningRate.append(float(i[1]))
+                    res.append(float(i[4]))
+            bestParams = res.index(max(res))
+            print("Meilleur paramètres pour une couche cachée de ",hidden," et epoch de ", j," sont :", "weiRed= ",weightRed[bestParams], " lr=", learningRate[bestParams],". Résultat obtenu:", res[bestParams],"%!")
+
+            #plt.xlabel("learningRate/WeighRed")
+            #plt.ylabel("Resultats")
+            #plt.scatter(learningRate,res)
+            #plt.savefig("lrResScatEpoch_{}".format(j))
+            #plt.show()
+            #plt.xlabel("weightRed")
+            #plt.ylabel("Resultats")
+            #plt.scatter(weightRed,res)
+            #plt.savefig("weightResScatEpoch_{}".format(j))
+            #plt.show()
+        hidden = hidden*2
+
+
 if __name__ == '__main__':
     # nombre d'image lues à chaque fois dans la base d'apprentissage (laisser à 1 sauf pour la question optionnelle sur les minibatchs)
     TRAIN_BATCH_SIZE = 1
@@ -149,33 +247,46 @@ if __name__ == '__main__':
 
     dtype = torch.FloatTensor
     device = torch.device("cpu")
-
+    isGraphActive = False
 ###########################################################
     # Params
-    #  95.557 with lr = 0.059 epoch = 4 and hidden_input = 256
-    #  96,457 with lr = 0.059 epoch = 4 and hidden_input = 1024
+
     input = 784
-    hidden_input = 256
+    hidden_input = 128
     output = 10
-    lr = 0.01
+    lr = 0.008
     epoch = 4
-    weightReducFactor = 1
+    weightReducFactor = 0.01
+
+
+    #######################
+    lock = 0
+    reducW = 0.1
+    reducLr = 0.01
+    #######################
+
 ###########################################################
+    # Function for making test and graphs
+    #parse_res()
+    #test_with_multiple_parameters(reducW,weightReducFactor,lr,reducLr,lock, hidden_input)
 
     # Training part
     Mlp = MLP()
     for e in range(epoch):
+        info = "weightReducFactor:  {}, lr: {}, hidden_input: {}, epoch: {}".format(weightReducFactor, lr,hidden_input, e + 1)
+        print(info)
         correct = 0
-        GraphPrecision = Graph()
+        if isGraphActive:
+            GraphPrecision = Graph()
         k = 0
-        print("Epoch number : ", e)
         for image,label in train_loader:
-            Mlp.setImage()
+            Mlp.setImage(image,label)
             Mlp.train()
             # Update graph when k=100 images
-            if k % 1000 == 0 and k > 0:
-                print("Training Image : ", k)
-                GraphPrecision.dynGraph()
+            if isGraphActive:
+                if k % 1000 == 0 and k > 0:
+                    print("Training Image : ", k)
+                    GraphPrecision.dynGraph()
             k = k + 1
 
     # Testing part
@@ -185,7 +296,7 @@ if __name__ == '__main__':
     k = 0
     for image in test_loader:
         label = test_data_label[k]
-        Mlp.setImage()
+        Mlp.setImage(image,label)
         Mlp.evaluate()
 
         # Update graph each k=100 images
@@ -197,5 +308,3 @@ if __name__ == '__main__':
 
     print("Nombre de prono correct : ", correct)
     print("Pourcentage de réussite : ", (correct / len(test_data)) * 100)
-
-

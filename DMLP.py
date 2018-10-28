@@ -188,42 +188,41 @@ if __name__ == '__main__':
     len_train_data = len(train_data)
     len_test_data = len(test_data)
 ###########################################################
-    # weightReduc = 0.1,hidden_layer= 32,lr = 0.015,nbLayers = 4,epoch = 3 ---> 93,385%
-    # weightReduc = 0.1,hidden_layer= 128,lr = 0.00268,nbLayers = 3,epoch = 4 ---> 93,528%
     # Params
-    #  95.557 with lr = 0.059 epoch = 4 and hidden_input = 256
-    #  96,457 with lr = 0.059 epoch = 4 and hidden_input = 1024
     input = 784
-    hidden_input = 16
+    hidden_input = 128
     output = 10
-    # lr = 0.019
-    lr = 0.01 # 94,28 descendre encore
+    lr = 0.008
     epoch = 4
-    weightReduc = 0.1
+    weightReduc = 0.01
     nbLayers = 2
 
     # 1 for sigmoid, 2 for ReLU
-    activationFunction = 2
-
+    activationFunction = 1
+    isGraphActive = False
 ###########################################################
 
     dtype = torch.FloatTensor
     device = torch.device("cpu")
     #device = torch.device("cuda:0") # Uncomment this to run on GPU
+
     # Training part
     Mlp = MLP()
     for e in range(epoch):
+        info = "weightReducFactor:  {}, lr: {}, hidden_input: {},nb_layer: {}, epoch: {}".format(weightReduc, lr,hidden_input,nbLayers, e + 1)
+        print(info)
         correct = 0
-        GraphPrecision = Graph()
+        if isGraphActive:
+            GraphPrecision = Graph()
         k = 0
-        print("Epoch number : ", e)
         for image,label in train_loader:
             Mlp.setImage()
             Mlp.train()
             # Update graph when k=100 images
-            if k % 1000 == 0 and k > 0:
-                print("Training Image : ", k)
-                GraphPrecision.dynGraph()
+            if isGraphActive:
+                if k % 1000 == 0 and k > 0:
+                    print("Training Image : ", k)
+                    GraphPrecision.dynGraph()
             k = k + 1
 
     # Testing part
@@ -237,7 +236,7 @@ if __name__ == '__main__':
         Mlp.evaluate()
 
         # Update graph each k=100 images
-        if k % 100 == 0 and k > 0:
+        if k % 1000 == 0 and k > 0:
             print("Processing Image : ", k)
             GraphPrecision.dynGraph()
 
