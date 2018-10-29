@@ -194,18 +194,18 @@ def parse_res():
                     learningRate.append(float(i[1]))
                     res.append(float(i[4]))
             bestParams = res.index(max(res))
-            print("Meilleur paramètres pour une couche cachée de ",hidden," et epoch de ", j," sont :", "weiRed= ",weightRed[bestParams], " lr=", learningRate[bestParams],". Résultat obtenu:", res[bestParams],"%!")
+            #print("Meilleur paramètres pour une couche cachée de ",hidden," et epoch de ", j," sont :", "weiRed= ",weightRed[bestParams], " lr=", learningRate[bestParams],". Résultat obtenu:", res[bestParams],"%!")
 
-            #plt.xlabel("learningRate/WeighRed")
-            #plt.ylabel("Resultats")
-            #plt.scatter(learningRate,res)
+            plt.xlabel("learningRate/WeighRed")
+            plt.ylabel("Resultats")
+            plt.scatter(learningRate,res)
             #plt.savefig("lrResScatEpoch_{}".format(j))
             #plt.show()
             #plt.xlabel("weightRed")
             #plt.ylabel("Resultats")
-            #plt.scatter(weightRed,res)
-            #plt.savefig("weightResScatEpoch_{}".format(j))
-            #plt.show()
+            plt.scatter(weightRed,res)
+            plt.savefig("weightResScatEpoch_{}_hidden{}".format(j,hidden))
+            plt.show()
         hidden = hidden*2
 
 
@@ -267,7 +267,7 @@ if __name__ == '__main__':
 
 ###########################################################
     # Function for making test and graphs
-    #parse_res()
+    parse_res()
     #test_with_multiple_parameters(reducW,weightReducFactor,lr,reducLr,lock, hidden_input)
 
     # Training part

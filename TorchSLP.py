@@ -157,16 +157,26 @@ def parse_res():
                 res.append(float(i[3]))
 
         bestParams = res.index(max(res))
+        avgRes = []
+        newWeightList = []
+        newLearningRateList = []
+        cpt = 0
+        for i in res:
+            if max(res) - 2 < i:
+                avgRes.append(i)
+                newWeightList.append(weightRed[cpt])
+                newLearningRateList.append(learningRate[cpt])
+            cpt = cpt +1
         print("Meilleur paramètres pour une epoch de ", j, " sont :", "weiRed= ",weightRed[bestParams], " lr=", learningRate[bestParams], ". Résultat obtenu:", res[bestParams], "%!")
-        #plt.xlabel("learningRate/WeighRed")
-        #plt.ylabel("Resultats")
-        #plt.scatter(learningRate,res)
+        #plt.xlabel("learningRate")
+        #plt.ylabel("weightRed")
+        #plt.scatter(newLearningRateList,newWeightList)
         #plt.savefig("lrResScatEpoch_{}".format(j))
         #plt.show()
         #plt.xlabel("weightRed")
         #plt.ylabel("Resultats")
         #plt.scatter(weightRed,res)
-        #plt.savefig("weightResScatEpoch_{}".format(j))
+        #plt.savefig("weightLrResFIXEpoch_{}".format(j))
         #plt.show()
 
         #res = np.array([res,res])
@@ -234,7 +244,7 @@ if __name__ == '__main__':
     reducLr = 0.01
 
     # Function for making test and graphs
-    #parse_res()
+    parse_res()
     #test_with_multiple_parameters()
 
     # Training part
