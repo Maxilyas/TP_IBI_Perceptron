@@ -181,7 +181,7 @@ if __name__ == '__main__':
     epoch = 4
     weightReduc = 0.01
     nbLayers = 3
-############################################################
+###########################################################
     # 1 for sigmoid, 2 for ReLU
     activationFunction = 1
     isGraphActive = False
