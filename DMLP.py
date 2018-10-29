@@ -180,10 +180,10 @@ if __name__ == '__main__':
     lr = 0.01
     epoch = 4
     weightReduc = 0.01
-    nbLayers = 3
+    nbLayers = 2
 ###########################################################
     # 1 for sigmoid, 2 for ReLU
-    activationFunction = 1
+    activationFunction = 2
     isGraphActive = False
     copy = False
 ###########################################################

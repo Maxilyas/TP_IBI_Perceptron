@@ -62,7 +62,7 @@ class MLP:
     # Initialize weights
     def __init__(self):
         self.weights_h1 = weightReducFactor * torch.randn(input, hidden_input,device=device).type(dtype)
-        self.weights_h2 = torch.randn(hidden_input, output,device=device).type(dtype)
+        self.weights_h2 = weightReducFactor*torch.randn(hidden_input, output,device=device).type(dtype)
         self.biais1 = torch.ones((1, hidden_input))
         self.biais2 = torch.ones((1, output))
 
