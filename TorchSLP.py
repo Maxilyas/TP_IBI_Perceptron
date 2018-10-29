@@ -243,6 +243,7 @@ if __name__ == '__main__':
     dtype = torch.FloatTensor
     device = torch.device("cpu")
     isGraphActive = False
+    copy = True
 ###################################################
     # Function for making test and graphs
     #parse_res()
@@ -285,12 +286,13 @@ if __name__ == '__main__':
                 GraphPrecision.yplot.append((correct / k) * 100)
                 GraphPrecision.updateGraph()
         k = k + 1
-    res = "Test : weightReducFactor:  {}, lr: {}, epoch: {}, Resultat: {}%".format(round(weightReducFactor, 4),round(lr, 6), e + 1, round((correct / len(test_data)) * 100, 6))
-    # print(res)
-    outRes = open("testSLP.txt", "a")
-    outRes.write(res)
-    outRes.write("\n")
-    outRes.close()
+    if copy:
+        res = "Test : weightReducFactor:  {}, lr: {}, epoch: {}, Resultat: {}%".format(round(weightReducFactor, 4),round(lr, 6), e + 1, round((correct / len(test_data)) * 100, 6))
+        # print(res)
+        outRes = open("testSLP.txt", "a")
+        outRes.write(res)
+        outRes.write("\n")
+        outRes.close()
     print("Nombre de prono correct : ", correct)
     print("Pourcentage de réussite : ", (correct / len(test_data)) * 100)
 

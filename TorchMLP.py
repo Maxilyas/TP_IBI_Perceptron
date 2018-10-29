@@ -238,6 +238,7 @@ if __name__ == '__main__':
     dtype = torch.FloatTensor
     device = torch.device("cpu")
     isGraphActive = False
+    copy = True
 ###########################################################
     # Params
 
@@ -295,6 +296,12 @@ if __name__ == '__main__':
             GraphPrecision.dynGraph()
 
         k = k + 1
-
+    if copy:
+        res = "Test : weightReducFactor:  {}, lr: {}, hidden_input: {}, epoch: {}, Resultat: {}%".format(round(weightReducFactor, 4), round(lr, 6), hidden_input, e + 1,round((correct / len(test_data)) * 100, 6))
+        # print(res)
+        outRes = open("testMLP.txt", "a")
+        outRes.write(res)
+        outRes.write("\n")
+        outRes.close()
     print("Nombre de prono correct : ", correct)
     print("Pourcentage de réussite : ", (correct / len(test_data)) * 100)

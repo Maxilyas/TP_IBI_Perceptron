@@ -185,6 +185,7 @@ if __name__ == '__main__':
     # 1 for sigmoid, 2 for ReLU
     activationFunction = 1
     isGraphActive = False
+    copy = True
 ###########################################################
 
     dtype = torch.FloatTensor
@@ -224,8 +225,14 @@ if __name__ == '__main__':
         if k % 1000 == 0 and k > 0:
             print("Processing Image : ", k)
             GraphPrecision.dynGraph()
-
         k = k + 1
+    if copy:
+        res = "Test : weightReducFactor:  {}, lr: {}, hidden_input: {},nb_layer: {}, epoch: {}, Resultat: {}%".format(round(weightReduc, 4), round(lr, 6), hidden_input,nbLayers, e + 1,round((correct / len(test_data)) * 100, 6))
+        # print(res)
+        outRes = open("testDMLP.txt", "a")
+        outRes.write(res)
+        outRes.write("\n")
+        outRes.close()
 
     print("Nombre de prono correct : ", correct)
     print("Pourcentage de réussite : ", (correct / len_test_data) * 100)
