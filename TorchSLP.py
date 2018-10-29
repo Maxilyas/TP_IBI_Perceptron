@@ -243,7 +243,7 @@ if __name__ == '__main__':
     dtype = torch.FloatTensor
     device = torch.device("cpu")
     isGraphActive = False
-    copy = True
+    copy = False
 ###################################################
     # Function for making test and graphs
     #parse_res()

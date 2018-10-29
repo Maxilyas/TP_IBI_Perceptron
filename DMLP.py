@@ -185,7 +185,7 @@ if __name__ == '__main__':
     # 1 for sigmoid, 2 for ReLU
     activationFunction = 1
     isGraphActive = False
-    copy = True
+    copy = False
 ###########################################################
 
     dtype = torch.FloatTensor
