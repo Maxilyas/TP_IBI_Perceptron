@@ -59,12 +59,14 @@ class Graph:
 
 
 class MLP:
+    # Initialize weights
     def __init__(self):
         self.weights_h1 = weightReducFactor * torch.randn(input, hidden_input,device=device).type(dtype)
         self.weights_h2 = torch.randn(hidden_input, output,device=device).type(dtype)
         self.biais1 = torch.ones((1, hidden_input))
         self.biais2 = torch.ones((1, output))
 
+    # Set Image
     def setImage(self,image,label):
         self.x = image
         self.t = label
@@ -85,7 +87,7 @@ class MLP:
         # Gradient descent out layer
         error2 = (self.t - y_pred)
 
-        # Compare for GRAPH UPDATE
+        # Compare only for GRAPH UPDATE
         Mlp.compareGuessRealNumber(y_pred)
 
         # Gradient descent hidden layer
@@ -113,7 +115,7 @@ class MLP:
 
 
 ############################################################################################################################################
-
+# Function for testing multiple parameters
 def test_with_multiple_parameters():
     global reducW,weightReducFactor,lr,reducLr,lock,hidden_input
     for i in range(19):
@@ -172,6 +174,7 @@ def test_with_multiple_parameters():
     weightReducFactor = 1.1
     reducW = 0.1
 
+# Function for parsing res in testResultSLP.txt
 def parse_res():
 
     with open('testResultMLP.txt') as f:
@@ -194,18 +197,18 @@ def parse_res():
                     learningRate.append(float(i[1]))
                     res.append(float(i[4]))
             bestParams = res.index(max(res))
-            #print("Meilleur paramètres pour une couche cachée de ",hidden," et epoch de ", j," sont :", "weiRed= ",weightRed[bestParams], " lr=", learningRate[bestParams],". Résultat obtenu:", res[bestParams],"%!")
+            print("Meilleur paramètres pour une couche cachée de ",hidden," et epoch de ", j," sont :", "weiRed= ",weightRed[bestParams], " lr=", learningRate[bestParams],". Résultat obtenu:", res[bestParams],"%!")
 
-            plt.xlabel("learningRate/WeighRed")
-            plt.ylabel("Resultats")
-            plt.scatter(learningRate,res)
-            #plt.savefig("lrResScatEpoch_{}".format(j))
+            #plt.xlabel("learningRate")
+            #plt.ylabel("Resultats")
+            #plt.scatter(learningRate,res)
+            #plt.savefig("LrResEpoch_{}H_{}".format(j,hidden))
             #plt.show()
             #plt.xlabel("weightRed")
             #plt.ylabel("Resultats")
-            plt.scatter(weightRed,res)
-            plt.savefig("weightResScatEpoch_{}_hidden{}".format(j,hidden))
-            plt.show()
+            #plt.scatter(weightRed,res)
+            #plt.savefig("weightResEpoch_{}Hidden_{}".format(j,hidden))
+            #plt.show()
         hidden = hidden*2
 
 
@@ -230,19 +233,6 @@ if __name__ == '__main__':
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=TRAIN_BATCH_SIZE, shuffle=True)
     # on crée le lecteur de la base de données de test (pour torch)
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
-    # 10 fois
-    #for i in range(0,10):
-    # on demande les prochaines données de la base
-    #   (_,(image,label)) = enumerate(train_loader).__next__()
-    # on les affiche
-    #  affichage(image.numpy(),label.numpy())
-    # NB pour lire (plus proprement) toute la base (ce que vous devrez faire dans le TP) plutôt utiliser la formulation suivante
-
-
-    #for image,label in train_loader:
-    #    affichage(image.numpy(),label.numpy())
-    #for image,label in test_loader:
-    #    affichage(image.numpy(),label.numpy())
 
 
     dtype = torch.FloatTensor
@@ -258,7 +248,7 @@ if __name__ == '__main__':
     epoch = 4
     weightReducFactor = 0.01
 
-
+    # Do not touch
     #######################
     lock = 0
     reducW = 0.1
@@ -267,7 +257,7 @@ if __name__ == '__main__':
 
 ###########################################################
     # Function for making test and graphs
-    parse_res()
+    #parse_res()
     #test_with_multiple_parameters(reducW,weightReducFactor,lr,reducLr,lock, hidden_input)
 
     # Training part

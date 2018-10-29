@@ -54,10 +54,12 @@ class Graph:
         plt.pause(0.1)
 
 class SLP:
+    # Initialize weights
     def __init__(self):
         self.weights = weightReducFactor * torch.randn(input,output,device=device).type(dtype)
         self.biais = torch.ones((1,output))
 
+    # Set Image
     def setImage(self,image,label):
         self.x = image
         self.t = label
@@ -68,17 +70,23 @@ class SLP:
             correct = correct + 1
 
     def train(self):
+        # Activity  of each neurons
         y_pred = self.x.mm(self.weights).add(self.biais)
-        # Only for graph update
+        # Only for graph update if isGraphActive true
         self.guess_real_number(y_pred)
-
+        # Corrections weights
         self.weights += lr * self.x.t()*(self.t - y_pred)
         self.biais += lr * (self.t - y_pred)
 
     def evaluate(self):
+        # prediction
         y_pred = self.x.mm(self.weights).add(self.biais)
+        # compare prediction and real number
         self.guess_real_number(y_pred)
 
+
+#####################################################################################################################
+# Function for testing multiple parameters
 def test_with_multiple_parameters():
     global reducW,weightReducFactor,lr,reducLr,lock
     for i in range(19):
@@ -136,6 +144,7 @@ def test_with_multiple_parameters():
     weightReducFactor=1.1
     reducW=0.1
 
+# Function for parsing res in testResultSLP.txt
 def parse_res():
 
     with open('testResultSLP.txt') as f:
@@ -214,37 +223,29 @@ if __name__ == '__main__':
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=TRAIN_BATCH_SIZE, shuffle=True)
     # on crée le lecteur de la base de données de test (pour torch)
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
-    # 10 fois
-    #for i in range(0,10):
-    # on demande les prochaines données de la base
-    #   (_,(image,label)) = enumerate(train_loader).__next__()
-    # on les affiche
-    #  affichage(image.numpy(),label.numpy())
-    # NB pour lire (plus proprement) toute la base (ce que vous devrez faire dans le TP) plutôt utiliser la formulation suivante
 
 
-    #for image,label in train_loader:
-    #    affichage(image.numpy(),label.numpy())
-    #for image,label in test_loader:
-    #    affichage(image.numpy(),label.numpy())
-
-    dtype = torch.FloatTensor
-    device = torch.device("cpu")
-
-    isGraphActive = False
+##################################################
+    # Params
     input = 784
     output = 10
-
     lr = 0.0003
     epoch = 2
     weightReducFactor = 0.02
 
+    # Do not touch
+    ###############
     lock = 0
     reducW = 0.1
     reducLr = 0.01
+    ###############
 
+    dtype = torch.FloatTensor
+    device = torch.device("cpu")
+    isGraphActive = False
+###################################################
     # Function for making test and graphs
-    parse_res()
+    #parse_res()
     #test_with_multiple_parameters()
 
     # Training part

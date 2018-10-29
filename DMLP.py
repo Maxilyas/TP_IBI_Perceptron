@@ -58,9 +58,11 @@ class Graph:
 
 
 class MLP:
+    # Initialize weights
     def __init__(self):
         self.weights_h1 = torch.autograd.Variable(weightReduc*torch.randn(input, hidden_input,device=device).type(dtype), requires_grad=True)
         self.biais1 = torch.autograd.Variable(torch.ones((1, hidden_input),device=device).type(dtype),requires_grad=True)
+        # Initialize layers
         if nbLayers > 1:
             for j in range(nbLayers - 1):
                 self.weights_j = 'self.weights_{}'.format(j)
@@ -70,6 +72,7 @@ class MLP:
         self.weights_h2 = torch.autograd.Variable(weightReduc*torch.randn(hidden_input, output,device=device).type(dtype),requires_grad=True)
         self.biais2 = torch.autograd.Variable(torch.ones((1, output),device=device).type(dtype),requires_grad=True)
 
+    # Set Image
     def setImage(self):
         self.x = torch.autograd.Variable(image,requires_grad=False)
         self.t = torch.autograd.Variable(label,requires_grad=False)
@@ -79,39 +82,33 @@ class MLP:
         if torch.argmax(outY2) == torch.argmax(self.t):
             correct = correct + 1
 
-    def reformat_label_outY(self,outY2):
-        for i in range(output):
-            if i != torch.argmax(outY2):
-                outY2[0][i] = 0
-            else:
-                outY2[0][i] = 1
-
+    # Train neural network on mnist dataset
     def train(self):
+        # choose activationFunction
         if activationFunction == 1:
+            # sigmoid
             y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1))
         if activationFunction == 2:
+            # ReLU
             y_pred = self.x.mm(self.weights_h1).add(self.biais1).clamp(min=0)
         if nbLayers > 1:
             for j in range(nbLayers-1):
                 #print("self",self.weights_j)
                 y_pred = y_pred.mm(self.weights_j).add(self.biaisl_j)
+        # Prediction
         y_pred = y_pred.mm(self.weights_h2).add(self.biais2)
 
-
-        #y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1)).mm(self.weights_h2).add(self.biais2)
-
-        #print("YPRED",y_pred)
-        #self.reformat_label_outY(y_pred)
+        # loss (quadratic error)
         loss = (y_pred - self.t).pow(2).sum()
-        #print(self.t,loss.item())
-        #print("loss",loss.size())
+
+        # backpropagation
         loss.backward()
 
-
+        # Only for Graph Update
         Mlp.compareGuessRealNumber(y_pred)
 
+        # update weights
         with torch.no_grad():
-            #print("weights",self.weights_h1.grad.data[0])
             self.weights_h1.data -= lr * self.weights_h1.grad.data
             self.weights_h2.data -= lr * self.weights_h2.grad.data
             self.biais1.data -= lr * self.biais1.grad.data
@@ -123,14 +120,14 @@ class MLP:
 
                     self.weights_j.grad.zero_()
                     self.biaisl_j.grad.zero_()
-
+            # reset grad
             self.weights_h1.grad.zero_()
             self.weights_h2.grad.zero_()
             self.biais1.grad.zero_()
             self.biais2.grad.zero_()
 
 
-
+    # Evaluate on test_loader
     def evaluate(self):
         y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1))
         if nbLayers > 1:
@@ -171,19 +168,7 @@ if __name__ == '__main__':
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=TRAIN_BATCH_SIZE, shuffle=True)
     # on crée le lecteur de la base de données de test (pour torch)
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=False)
-    # 10 fois
-    #for i in range(0,10):
-    # on demande les prochaines données de la base
-    #   (_,(image,label)) = enumerate(train_loader).__next__()
-    # on les affiche
-    #  affichage(image.numpy(),label.numpy())
-    # NB pour lire (plus proprement) toute la base (ce que vous devrez faire dans le TP) plutôt utiliser la formulation suivante
 
-
-    #for image,label in train_loader:
-    #    affichage(image.numpy(),label.numpy())
-    #for image,label in test_loader:
-    #    affichage(image.numpy(),label.numpy())
 
     len_train_data = len(train_data)
     len_test_data = len(test_data)
@@ -192,11 +177,11 @@ if __name__ == '__main__':
     input = 784
     hidden_input = 128
     output = 10
-    lr = 0.008
+    lr = 0.01
     epoch = 4
     weightReduc = 0.01
-    nbLayers = 2
-
+    nbLayers = 3
+############################################################
     # 1 for sigmoid, 2 for ReLU
     activationFunction = 1
     isGraphActive = False
