@@ -88,13 +88,17 @@ class MLP:
         if activationFunction == 1:
             # sigmoid
             y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1))
+            if nbLayers > 1:
+                for j in range(nbLayers-1):
+                    #print("self",self.weights_j)
+                    y_pred = torch.sigmoid(y_pred.mm(self.weights_j).add(self.biaisl_j))
         if activationFunction == 2:
             # ReLU
             y_pred = self.x.mm(self.weights_h1).add(self.biais1).clamp(min=0)
-        if nbLayers > 1:
-            for j in range(nbLayers-1):
-                #print("self",self.weights_j)
-                y_pred = y_pred.mm(self.weights_j).add(self.biaisl_j)
+            if nbLayers > 1:
+                for j in range(nbLayers-1):
+                    #print("self",self.weights_j)
+                    y_pred = torch.sigmoid(y_pred.mm(self.weights_j).add(self.biaisl_j))
         # Prediction
         y_pred = y_pred.mm(self.weights_h2).add(self.biais2)
 
@@ -129,10 +133,20 @@ class MLP:
 
     # Evaluate on test_loader
     def evaluate(self):
-        y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1))
-        if nbLayers > 1:
-            for j in range(nbLayers - 1):
-                y_pred = y_pred.mm(self.weights_j).add(self.biaisl_j)
+        if activationFunction == 1:
+            # sigmoid
+            y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1))
+            if nbLayers > 1:
+                for j in range(nbLayers - 1):
+                    # print("self",self.weights_j)
+                    y_pred = torch.sigmoid(y_pred.mm(self.weights_j).add(self.biaisl_j))
+        if activationFunction == 2:
+            # ReLU
+            y_pred = self.x.mm(self.weights_h1).add(self.biais1).clamp(min=0)
+            if nbLayers > 1:
+                for j in range(nbLayers - 1):
+                    # print("self",self.weights_j)
+                    y_pred = torch.sigmoid(y_pred.mm(self.weights_j).add(self.biaisl_j))
         y_pred = y_pred.mm(self.weights_h2).add(self.biais2)
 
         #y_pred = torch.sigmoid(self.x.mm(self.weights_h1).add(self.biais1)).mm(self.weights_h2).add(self.biais2)
@@ -174,16 +188,17 @@ if __name__ == '__main__':
     len_test_data = len(test_data)
 ###########################################################
     # Params
+    # best hidden_input= 128,lr = 0.02,epoch = 12,weightReduc = 0.1,nbLayers = 2  (98.13%).
     input = 784
-    hidden_input = 128
+    hidden_input = 64
     output = 10
-    lr = 0.01
+    lr = 0.02
     epoch = 4
-    weightReduc = 0.01
+    weightReduc = 0.1
     nbLayers = 2
 ###########################################################
     # 1 for sigmoid, 2 for ReLU
-    activationFunction = 2
+    activationFunction = 1
     isGraphActive = False
     copy = False
 ###########################################################
@@ -210,7 +225,7 @@ if __name__ == '__main__':
                     print("Training Image : ", k)
                     GraphPrecision.dynGraph()
             k = k + 1
-
+        print("Rs : ",(correct / k) * 100)
     # Testing part
 
     GraphPrecision = Graph()

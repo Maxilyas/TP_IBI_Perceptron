@@ -230,7 +230,7 @@ if __name__ == '__main__':
     input = 784
     output = 10
     lr = 0.0003
-    epoch = 2
+    epoch = 3
     weightReducFactor = 0.02
 
     # Do not touch
