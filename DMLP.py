@@ -225,7 +225,7 @@ if __name__ == '__main__':
                     print("Training Image : ", k)
                     GraphPrecision.dynGraph()
             k = k + 1
-        print("Rs : ",(correct / k) * 100)
+        print("RsTraining : ",(correct / k) * 100)
     # Testing part
 
     GraphPrecision = Graph()

@@ -268,6 +268,7 @@ if __name__ == '__main__':
                     GraphPrecision.yplot.append((correct / k)*100)
                     GraphPrecision.updateGraph()
             k = k +1
+        print("RsTraining : ",(correct / k) * 100)
 
     # Testing part
     if isGraphActive:
